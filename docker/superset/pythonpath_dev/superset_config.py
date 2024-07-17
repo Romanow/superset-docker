@@ -2,7 +2,13 @@ import logging
 import os
 
 from celery.schedules import crontab
+from flask_appbuilder.security.manager import AUTH_OAUTH
 from flask_caching.backends.filesystemcache import FileSystemCache
+from superset.security import SupersetSecurityManager
+
+# ================================================================================================================
+# ================================================================================================================
+# ================================================================================================================
 
 logger = logging.getLogger()
 
@@ -49,6 +55,54 @@ CACHE_CONFIG = {
 }
 DATA_CACHE_CONFIG = CACHE_CONFIG
 
+# ================================================================================================================
+# ================================================================================================================
+# ================================================================================================================
+
+CLIENT_ID = os.getenv("CLIENT_ID")
+CLIENT_SECRET = os.getenv("CLIENT_SECRET")
+OAUTH_PROVIDER_URL = os.getenv("OAUTH_PROVIDER_URL")
+
+AUTH_TYPE = AUTH_OAUTH
+OAUTH_PROVIDERS = [
+    {
+        'name': 'Auth0',
+        'token_key': 'access_token',
+        'icon': 'fa-openid',
+        'remote_app': {
+            'client_id': CLIENT_ID,
+            'client_secret': CLIENT_SECRET,
+            'scope': 'openid profile email',
+            'api_base_url': OAUTH_PROVIDER_URL,
+            'server_metadata_url': f"{OAUTH_PROVIDER_URL}/.well-known/openid-configuration"
+        }
+    }
+]
+
+
+class Oauth2SecurityManager(SupersetSecurityManager):
+    def oauth_user_info(self, provider, response=None):
+        response = self.appbuilder.sm.oauth_remotes[provider].get('userinfo')
+        me = response.json()
+        logger.info("JSON: {0}".format(me))
+        return {
+            'name': me['name'],
+            'email': me['email'],
+            'id': me['sub'],
+            'username': me['name'],
+            'first_name': '',
+            'last_name': ''
+        }
+
+
+CUSTOM_SECURITY_MANAGER = Oauth2SecurityManager
+AUTH_USER_REGISTRATION = True
+AUTH_USER_REGISTRATION_ROLE = "Public"
+
+
+# ================================================================================================================
+# ================================================================================================================
+# ================================================================================================================
 
 class CeleryConfig:
     broker_url = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_CELERY_DB}"
@@ -70,6 +124,10 @@ class CeleryConfig:
 
 CELERY_CONFIG = CeleryConfig
 
+# ================================================================================================================
+# ================================================================================================================
+# ================================================================================================================
+
 FEATURE_FLAGS = {"ALERT_REPORTS": True}
 ALERT_REPORTS_NOTIFICATION_DRY_RUN = True
 WEBDRIVER_BASEURL = "http://superset:8088/"  # When using docker compose baseurl should be http://superset_app:8088/
@@ -77,16 +135,10 @@ WEBDRIVER_BASEURL = "http://superset:8088/"  # When using docker compose baseurl
 WEBDRIVER_BASEURL_USER_FRIENDLY = WEBDRIVER_BASEURL
 SQLLAB_CTAS_NO_LIMIT = True
 
-#
-# Optionally import superset_config_docker.py (which will have been included on
-# the PYTHONPATH) in order to allow for local settings to be overridden
-#
 try:
     import superset_config_docker
     from superset_config_docker import *  # noqa
 
-    logger.info(
-        f"Loaded your Docker configuration at " f"[{superset_config_docker.__file__}]"
-    )
+    logger.info(f"Loaded your Docker configuration at " f"[{superset_config_docker.__file__}]")
 except ImportError:
     logger.info("Using default Docker config...")

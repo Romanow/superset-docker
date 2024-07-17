@@ -13,13 +13,3 @@ jobs:
 
       - name: Validate
         uses: pre-commit/action@v3.0.0
-
-      - name: Run Apache Superset
-        timeout-minutes: 10
-        run: docker compose up -d --wait
-
-      - name: Stop containers
-        if: always()
-        timeout-minutes: 5
-        continue-on-error: true
-        run: docker compose down -v

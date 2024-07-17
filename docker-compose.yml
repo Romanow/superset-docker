@@ -42,6 +42,8 @@ services:
     env_file:
       - path: docker/.env
         required: true
+      - path: docker/.env.local
+        required: false
     ports:
       - "8088:8088"
     volumes:
@@ -60,6 +62,8 @@ services:
     env_file:
       - path: docker/.env
         required: true
+      - path: docker/.env.local
+        required: false
     healthcheck:
       disable: true
     volumes:
@@ -78,6 +82,8 @@ services:
     env_file:
       - path: docker/.env
         required: true
+      - path: docker/.env.local
+        required: false
     healthcheck:
       test: ["CMD-SHELL", "celery -A superset.tasks.celery_app:app inspect ping -d celery@$$HOSTNAME"]
       interval: 10s
@@ -99,6 +105,8 @@ services:
     env_file:
       - path: docker/.env
         required: true
+      - path: docker/.env.local
+        required: false
     healthcheck:
       disable: true
     volumes:
