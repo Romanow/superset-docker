@@ -91,13 +91,15 @@ class Oauth2SecurityManager(SupersetSecurityManager):
             'id': me['sub'],
             'username': me['name'],
             'first_name': '',
-            'last_name': ''
+            'last_name': '',
+            'is_active': True
         }
 
 
 CUSTOM_SECURITY_MANAGER = Oauth2SecurityManager
 AUTH_USER_REGISTRATION = True
-AUTH_USER_REGISTRATION_ROLE = "Public"
+AUTH_ROLES_SYNC_AT_LOGIN = True
+AUTH_USER_REGISTRATION_ROLE = "Admin"
 
 
 # ================================================================================================================
