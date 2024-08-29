@@ -15,7 +15,7 @@ services:
       - redis-data:/bitnami/redis/data
 
   postgres:
-    image: postgres:15
+    image: "postgres:15"
     container_name: postgres
     env_file:
       - path: docker/.env
@@ -35,15 +35,34 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - ./docker/postgres:/docker-entrypoint-initdb.d
 
+  openldap:
+    image: "bitnami/openldap:2.6"
+    container_name: openldap
+    environment:
+      - LDAP_ADMIN_USERNAME=admin
+      - LDAP_ADMIN_PASSWORD=admin
+      - LDAP_USERS=program
+      - LDAP_PASSWORDS=test
+      - LDAP_BASE=dc=example,dc=org
+      - LDAP_ADMIN_DN=cn=admin,dc=example,dc=org
+    healthcheck:
+      test: [ "CMD-SHELL", "ldapsearch -H ldapi:/// -b dc=example,dc=org cn > /dev/null" ]
+      interval: 15s
+      retries: 5
+      timeout: 5s
+    ports:
+      - "1389:1389"
+      - "1636:1636"
+    volumes:
+      - openldap-data:/bitnami/openldap
+
   superset:
-    image: apache/superset:latest
+    image: "apache/superset:latest"
     container_name: superset-app
     command: [ "/app/docker/docker-bootstrap.sh", "app-gunicorn" ]
     env_file:
       - path: docker/.env
         required: true
-      - path: docker/.env.local
-        required: false
     ports:
       - "8088:8088"
     volumes:
@@ -54,16 +73,18 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      openldap:
+        condition: service_healthy
+      superset-init:
+        condition: service_completed_successfully
 
   superset-init:
-    image: apache/superset:latest
+    image: "apache/superset:latest"
     container_name: superset-init
     command: [ "/app/docker/docker-init.sh" ]
     env_file:
       - path: docker/.env
         required: true
-      - path: docker/.env.local
-        required: false
     healthcheck:
       disable: true
     volumes:
@@ -76,16 +97,14 @@ services:
         condition: service_healthy
 
   superset-worker:
-    image: apache/superset:latest
+    image: "apache/superset:latest"
     container_name: superset-worker
     command: [ "/app/docker/docker-bootstrap.sh", "worker" ]
     env_file:
       - path: docker/.env
         required: true
-      - path: docker/.env.local
-        required: false
     healthcheck:
-      test: ["CMD-SHELL", "celery -A superset.tasks.celery_app:app inspect ping -d celery@$$HOSTNAME"]
+      test: [ "CMD-SHELL", "celery -A superset.tasks.celery_app:app inspect ping -d celery@$$HOSTNAME" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -99,14 +118,12 @@ services:
         condition: service_healthy
 
   superset-worker-beat:
-    image: apache/superset:latest
+    image: "apache/superset:latest"
     container_name: superset-worker-beat
     command: [ "/app/docker/docker-bootstrap.sh", "beat" ]
     env_file:
       - path: docker/.env
         required: true
-      - path: docker/.env.local
-        required: false
     healthcheck:
       disable: true
     volumes:
@@ -117,8 +134,11 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      superset-init:
+        condition: service_completed_successfully
 
 volumes:
   superset-data:
   postgres-data:
   redis-data:
+  openldap-data:
