@@ -74,6 +74,12 @@ AUTH_LDAP_BIND_PASSWORD = "admin"
 
 PUBLIC_ROLE_LIKE = "Gamma"
 ENABLE_CORS = True
+CORS_OPTIONS = {
+    "supports_credentials": True,
+    "allow_headers": ["*"],
+    "resources": ["*"],
+    "origins": ["*"]
+}
 WTF_CSRF_ENABLED = False
 TALISMAN_ENABLED = False
 HTTP_HEADERS = {"X-Frame-Options": "ALLOWALL"}
