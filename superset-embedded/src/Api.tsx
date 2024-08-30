@@ -1,12 +1,6 @@
+import {AccessToken, GuestToken} from "./types";
+
 const baseURL = process.env.REACT_APP_SUPERSET_URL;
-
-type AccessToken = {
-    access_token: string
-}
-
-type GuestToken = {
-    token: string
-}
 
 export const Api = {
     token: async (username: String, password: String, dashboardId: String): Promise<string> => {
