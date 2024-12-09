@@ -19,7 +19,7 @@ const App: FC = () => {
             });
         }
         if (document.getElementById("superset")) {
-            void embedded("40eccf4f-56de-4bfc-9f34-a057a6ad39da")
+            void embedded("6faa5694-4837-477f-8065-57b50ed36cb4") // embedded dashboard ID
         }
     }, []);
 

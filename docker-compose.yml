@@ -18,8 +18,7 @@ services:
     image: "postgres:15"
     container_name: postgres
     env_file:
-      - path: docker/.env
-        required: true
+      - docker/.env
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "postgres"
@@ -61,8 +60,7 @@ services:
     container_name: superset-app
     command: [ "/app/docker/docker-bootstrap.sh", "app-gunicorn" ]
     env_file:
-      - path: docker/.env
-        required: true
+      - docker/.env
     ports:
       - "8088:8088"
     volumes:
@@ -83,8 +81,7 @@ services:
     container_name: superset-init
     command: [ "/app/docker/docker-init.sh" ]
     env_file:
-      - path: docker/.env
-        required: true
+      - docker/.env
     healthcheck:
       disable: true
     volumes:
@@ -101,8 +98,7 @@ services:
     container_name: superset-worker
     command: [ "/app/docker/docker-bootstrap.sh", "worker" ]
     env_file:
-      - path: docker/.env
-        required: true
+      - docker/.env
     healthcheck:
       test: [ "CMD-SHELL", "celery -A superset.tasks.celery_app:app inspect ping -d celery@$$HOSTNAME" ]
       interval: 10s
@@ -122,8 +118,7 @@ services:
     container_name: superset-worker-beat
     command: [ "/app/docker/docker-bootstrap.sh", "beat" ]
     env_file:
-      - path: docker/.env
-        required: true
+      - docker/.env
     healthcheck:
       disable: true
     volumes:
